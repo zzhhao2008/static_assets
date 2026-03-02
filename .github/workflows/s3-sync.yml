@@ -1,0 +1,28 @@
+name: CDN同步
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Sync files to S3
+      env:
+        # 设置环境变量供 AWS CLI 使用
+        AWS_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: ${{ secrets.S3_REGION || 'auto' }}
+      run: |
+        aws s3 sync . s3://${{ secrets.S3_BUCKET_NAME }}/zsvstudio \
+          --endpoint-url ${{ secrets.S3_ENDPOINT_URL }} \
+          --size-only \
+          --delete \
+          --exclude ".git/*" \
+          --exclude ".github/*"
